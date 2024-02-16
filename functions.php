@@ -1,21 +1,7 @@
 <?php
 session_start();
 // Function to establish a database connection
-function connectToDatabase()
-{
-    $host = 'localhost';
-    $username = 'root';
-    $password = 'root';
-    $database = 'the_realm_db';
-
-    $connection = new mysqli($host, $username, $password, $database);
-
-    if ($connection->connect_error) {
-        die("Connection failed: " . $connection->connect_error);
-    }
-
-    return $connection;
-}
+require 'db_conn.php';
 
 function isLoggedIn()
 {
