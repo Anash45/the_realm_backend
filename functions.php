@@ -3,9 +3,9 @@
 // Function to establish a database connection
 function connectToDatabase() {
     $host = 'localhost';
-    $username = 'your_username';
-    $password = 'your_password';
-    $database = 'your_database';
+    $username = 'root';
+    $password = 'root';
+    $database = 'the_realm_db';
 
     $connection = new mysqli($host, $username, $password, $database);
 
@@ -16,6 +16,23 @@ function connectToDatabase() {
     return $connection;
 }
 
+function sanitize($input) {
+    $conn = connectToDatabase();
+
+    if (is_array($input)) {
+        foreach ($input as $key => $value) {
+            $input[$key] = sanitize($value);
+        }
+    } else {
+        // Remove leading/trailing whitespace
+        $input = trim($input);
+        // Escape special characters to prevent SQL injection
+        $input = mysqli_real_escape_string($conn, $input);
+    }
+    
+    return $input;
+}
+
 // Function to insert a new account
 function insertAccount($username, $password, $role) {
     $connection = connectToDatabase();
@@ -23,15 +40,15 @@ function insertAccount($username, $password, $role) {
     // Check if the email already exists
     $existingAccount = $connection->query("SELECT * FROM accounts WHERE username='$username'")->fetch_assoc();
     if ($existingAccount) {
-        return json_encode(array("success" => false, "data" => "Username already exists."));
+        return array("success" => false, "data" => "Username already exists.");
     }
 
     $query = "INSERT INTO accounts (username, password, role) VALUES ('$username', '$password', '$role')";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "New record created successfully."));
+        return array("success" => true, "data" => "New record created successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error));
+        return array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error);
     }
 }
 
@@ -42,9 +59,9 @@ function deleteAccountById($id) {
     $query = "DELETE FROM accounts WHERE id=$id";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record deleted successfully."));
+        return array("success" => true, "data" => "Record deleted successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error deleting record: " . $connection->error));
+        return array("success" => false, "data" => "Error deleting record: " . $connection->error);
     }
 }
 
@@ -67,9 +84,9 @@ function updateAccount($updateData, $conditions) {
     $query = "UPDATE accounts SET $updateString WHERE $conditionString";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record updated successfully."));
+        return array("success" => true, "data" => "Record updated successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error updating record: " . $connection->error));
+        return array("success" => false, "data" => "Error updating record: " . $connection->error);
     }
 }
 
@@ -85,9 +102,9 @@ function getAllAccounts() {
         while ($row = $result->fetch_assoc()) {
             $accounts[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $accounts));
+        return array("success" => true, "data" => $accounts);
     } else {
-        return json_encode(array("success" => false, "data" => "No accounts found."));
+        return array("success" => false, "data" => "No accounts found.");
     }
 }
 
@@ -100,9 +117,9 @@ function getAccountById($id) {
 
     if ($result->num_rows == 1) {
         $account = $result->fetch_assoc();
-        return json_encode(array("success" => true, "data" => $account));
+        return array("success" => true, "data" => $account);
     } else {
-        return json_encode(array("success" => false, "data" => "Account not found."));
+        return array("success" => false, "data" => "Account not found.");
     }
 }
 
@@ -115,9 +132,9 @@ function getAccountByUsername($username) {
 
     if ($result->num_rows == 1) {
         $account = $result->fetch_assoc();
-        return json_encode(array("success" => true, "data" => $account));
+        return array("success" => true, "data" => $account);
     } else {
-        return json_encode(array("success" => false, "data" => "Account not found."));
+        return array("success" => false, "data" => "Account not found.");
     }
 }
 
@@ -128,9 +145,9 @@ function insertVote($serverName, $username, $toplist, $ipAddress, $rewardAmount,
     $query = "INSERT INTO finalized_votes (server_name, username, toplist, ip_address, reward_amount, time_voted, claimed, vpn) VALUES ('$serverName', '$username', '$toplist', '$ipAddress', $rewardAmount, $timeVoted, $claimed, $vpn)";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "New record created successfully."));
+        return array("success" => true, "data" => "New record created successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error));
+        return array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error);
     }
 }
 
@@ -141,9 +158,9 @@ function deleteVoteById($id) {
     $query = "DELETE FROM finalized_votes WHERE id=$id";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record deleted successfully."));
+        return array("success" => true, "data" => "Record deleted successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error deleting record: " . $connection->error));
+        return array("success" => false, "data" => "Error deleting record: " . $connection->error);
     }
 }
 
@@ -166,9 +183,9 @@ function updateVote($updateData, $conditions) {
     $query = "UPDATE finalized_votes SET $updateString WHERE $conditionString";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record updated successfully."));
+        return array("success" => true, "data" => "Record updated successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error updating record: " . $connection->error));
+        return array("success" => false, "data" => "Error updating record: " . $connection->error);
     }
 }
 
@@ -184,9 +201,9 @@ function getAllVotes() {
         while ($row = $result->fetch_assoc()) {
             $votes[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $votes));
+        return array("success" => true, "data" => $votes);
     } else {
-        return json_encode(array("success" => false, "data" => "No votes found."));
+        return array("success" => false, "data" => "No votes found.");
     }
 }
 
@@ -199,9 +216,9 @@ function getVoteById($id) {
 
     if ($result->num_rows == 1) {
         $vote = $result->fetch_assoc();
-        return json_encode(array("success" => true, "data" => $vote));
+        return array("success" => true, "data" => $vote);
     } else {
-        return json_encode(array("success" => false, "data" => "Vote not found."));
+        return array("success" => false, "data" => "Vote not found.");
     }
 }
 
@@ -217,9 +234,9 @@ function getVotesByServerName($serverName) {
         while ($row = $result->fetch_assoc()) {
             $votes[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $votes));
+        return array("success" => true, "data" => $votes);
     } else {
-        return json_encode(array("success" => false, "data" => "No votes found for the specified server name."));
+        return array("success" => false, "data" => "No votes found for the specified server name.");
     }
 }
 
@@ -230,9 +247,9 @@ function insertStoreCategory($store, $categoryName, $categoryImage) {
     $query = "INSERT INTO store_categories (store, category_name, category_image) VALUES ('$store', '$categoryName', '$categoryImage')";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "New record created successfully."));
+        return array("success" => true, "data" => "New record created successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error));
+        return array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error);
     }
 }
 
@@ -243,9 +260,9 @@ function deleteStoreCategoryById($id) {
     $query = "DELETE FROM store_categories WHERE id=$id";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record deleted successfully."));
+        return array("success" => true, "data" => "Record deleted successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error deleting record: " . $connection->error));
+        return array("success" => false, "data" => "Error deleting record: " . $connection->error);
     }
 }
 
@@ -268,9 +285,9 @@ function updateStoreCategory($updateData, $conditions) {
     $query = "UPDATE store_categories SET $updateString WHERE $conditionString";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record updated successfully."));
+        return array("success" => true, "data" => "Record updated successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error updating record: " . $connection->error));
+        return array("success" => false, "data" => "Error updating record: " . $connection->error);
     }
 }
 
@@ -286,9 +303,9 @@ function getAllStoreCategories() {
         while ($row = $result->fetch_assoc()) {
             $storeCategories[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $storeCategories));
+        return array("success" => true, "data" => $storeCategories);
     } else {
-        return json_encode(array("success" => false, "data" => "No store categories found."));
+        return array("success" => false, "data" => "No store categories found.");
     }
 }
 
@@ -302,9 +319,9 @@ function getStoreCategoryById($id) {
     $storeCategory = null;
     if ($result->num_rows == 1) {
         $storeCategory = $result->fetch_assoc();
-        return json_encode(array("success" => true, "data" => $storeCategory));
+        return array("success" => true, "data" => $storeCategory);
     } else {
-        return json_encode(array("success" => false, "data" => "Store category not found."));
+        return array("success" => false, "data" => "Store category not found.");
     }
 }
 
@@ -320,9 +337,9 @@ function getStoreCategoriesByStore($store) {
         while ($row = $result->fetch_assoc()) {
             $storeCategories[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $storeCategories));
+        return array("success" => true, "data" => $storeCategories);
     } else {
-        return json_encode(array("success" => false, "data" => "No store categories found for the specified store."));
+        return array("success" => false, "data" => "No store categories found for the specified store.");
     }
 }
 
@@ -333,9 +350,9 @@ function insertDonation($donorName, $amount, $date, $ipAddress) {
     $query = "INSERT INTO donations (donor_name, amount, date, ip_address) VALUES ('$donorName', $amount, '$date', '$ipAddress')";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "New record created successfully."));
+        return array("success" => true, "data" => "New record created successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error));
+        return array("success" => false, "data" => "Error: " . $query . "<br>" . $connection->error);
     }
 }
 
@@ -346,9 +363,9 @@ function deleteDonationById($id) {
     $query = "DELETE FROM donations WHERE id=$id";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record deleted successfully."));
+        return array("success" => true, "data" => "Record deleted successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error deleting record: " . $connection->error));
+        return array("success" => false, "data" => "Error deleting record: " . $connection->error);
     }
 }
 
@@ -371,9 +388,9 @@ function updateDonation($updateData, $conditions) {
     $query = "UPDATE donations SET $updateString WHERE $conditionString";
 
     if ($connection->query($query) === TRUE) {
-        return json_encode(array("success" => true, "data" => "Record updated successfully."));
+        return array("success" => true, "data" => "Record updated successfully.");
     } else {
-        return json_encode(array("success" => false, "data" => "Error updating record: " . $connection->error));
+        return array("success" => false, "data" => "Error updating record: " . $connection->error);
     }
 }
 
@@ -389,9 +406,9 @@ function getAllDonations() {
         while ($row = $result->fetch_assoc()) {
             $donations[] = $row;
         }
-        return json_encode(array("success" => true, "data" => $donations));
+        return array("success" => true, "data" => $donations);
     } else {
-        return json_encode(array("success" => false, "data" => "No donations found."));
+        return array("success" => false, "data" => "No donations found.");
     }
 }
 
@@ -405,8 +422,36 @@ function getDonationById($id) {
     $donation = null;
     if ($result->num_rows == 1) {
         $donation = $result->fetch_assoc();
-        return json_encode(array("success" => true, "data" => $donation));
+        return array("success" => true, "data" => $donation);
     } else {
-        return json_encode(array("success" => false, "data" => "Donation not found."));
+        return array("success" => false, "data" => "Donation not found.");
+    }
+}
+
+function getAllActiveSessions() {
+    $connection = connectToDatabase();
+
+    $query = "SELECT online_users.id, accounts.username, online_users.last_activity FROM online_users JOIN accounts ON online_users.account_id = accounts.id";
+    $result = $connection->query($query);
+
+    $sessions = [];
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $sessions[] = $row;
+        }
+        return array("success" => true, "data" => $sessions);
+    } else {
+        return array("success" => false, "data" => "Sessions not found.");
+    }
+}
+function deleteSessionById($id) {
+    $connection = connectToDatabase();
+
+    $query = "DELETE FROM online_users WHERE id=$id";
+
+    if ($connection->query($query) === TRUE) {
+        return array("success" => true, "data" => "Record deleted successfully.");
+    } else {
+        return array("success" => false, "data" => "Error deleting record: " . $connection->error);
     }
 }
