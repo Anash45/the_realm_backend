@@ -15,6 +15,7 @@
 <script src="assets/js/misc.js"></script>
 <script src="assets/js/settings.js"></script>
 <script src="assets/js/todolist.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables@1.10.18/media/js/jquery.dataTables.min.js"></script>
 <!-- endinject -->
 <!-- Custom js for this page -->
 <script src="assets/js/dashboard.js"></script>

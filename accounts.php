@@ -1,5 +1,8 @@
 <?php
 include('functions.php');
+if (!isLoggedIn() || !isAdmin()) {
+    header("Location: login.php");
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

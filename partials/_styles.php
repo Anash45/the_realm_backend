@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icon.min.css">
 <link rel="stylesheet" href="assets/vendors/owl-carousel-2/owl.carousel.min.css">
 <link rel="stylesheet" href="assets/vendors/owl-carousel-2/owl.theme.default.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables@1.10.18/media/css/jquery.dataTables.min.css">
 <!-- End plugin css for this page -->
 <!-- inject:css -->
 <!-- endinject -->

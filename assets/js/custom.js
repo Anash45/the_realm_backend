@@ -7,3 +7,8 @@ $(document).ready(function(){
         })
     })
 })
+
+$(document).ready(function() {
+    // Initialize DataTable
+    $('.dataTable').DataTable();
+});

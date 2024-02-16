@@ -172,7 +172,6 @@ CREATE TABLE IF NOT EXISTS `stores` (
   `logo` text NOT NULL,
   `favicon` text NOT NULL,
   `color` text NOT NULL,
-  `top_donators_last_reset` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 

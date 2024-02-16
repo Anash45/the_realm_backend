@@ -1,5 +1,8 @@
 <?php
 include('functions.php');
+if (!isLoggedIn() || !isAdmin()) {
+    header("Location: login.php");
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +72,7 @@ include('functions.php');
                             <h2 class="display1 text-center">Donations</h2>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 grid-margin stretch-card mx-auto">
+                            <div class="col-md-6 mx-auto mb-3">
                                 <a href="donations.php" class="btn btn-sm btn-primary"><i class="mdi mdi-arrow-left"></i> Back</a>
                             </div>
                         </div>

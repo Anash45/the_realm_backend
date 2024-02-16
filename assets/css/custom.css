@@ -1,3 +1,29 @@
 .form-control,.form-control:focus{
     color: #efefef !important;
 }
+
+.dataTables_info, .dataTables_wrapper td, .dataTables_paginate a, .dataTables_wrapper label, .dataTables_length select {
+    color: #6c7293 !important;
+}
+table.dataTable tbody tr{
+    background-color:  transparent !important;
+}
+
+.w-min{
+    width: min-content;
+}
+
+.table-img{
+    height: auto !important;
+    width: auto !important;
+    max-height: 80px !important;
+    max-width: 80px !important;
+    border-radius: 8px !important;
+}
+
+.color-ind{
+    border: 1px solid #EFEFEF;
+    height: 30px;
+    width: 30px;
+    border-radius: 8px;
+}
