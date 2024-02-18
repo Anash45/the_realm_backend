@@ -47,13 +47,29 @@ if (!isLoggedIn() || !isAdmin()) {
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-lg-6 grid-margin stretch-card mx-auto">
+                            <div class="col-lg-8 grid-margin stretch-card mx-auto">
                                 <?php
                                 $allSessions = getAllActiveSessions();
                                 $sessions = $allSessions['data'];
                                 ?>
                                 <div class="card">
                                     <div class="card-body">
+                                        <div class="py-3 d-flex flex-column w-100 gap-3">
+                                            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET">
+                                                <div class="form-group mb-0">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" name="q" value="<?php echo isset($_GET['q']) ? $_GET['q'] : ''; ?>"
+                                                            placeholder="Search..." aria-label="Search..."
+                                                            aria-describedby="basic-addon2">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-sm btn-primary"
+                                                                type="submit">Search</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <?php echo getPagination('online_users'); ?>
+                                        </div>
                                         <h4 class="card-title">Active Sessions</h4>
                                         <div class="table-responsive">
                                             <table class="table">
@@ -61,7 +77,8 @@ if (!isLoggedIn() || !isAdmin()) {
                                                     <tr>
                                                         <th>ID</th>
                                                         <th>Username</th>
-                                                        <th>Last Activity</th>
+                                                        <th>IP Address</th>
+                                                        <th>Last Login</th>
                                                         <th>Kick</th>
                                                     </tr>
                                                 </thead>
@@ -75,7 +92,8 @@ if (!isLoggedIn() || !isAdmin()) {
                                                             echo '<tr>
                                                             <td>' . $session['id'] . '</td>
                                                             <td>' . $session['username'] . '</td>
-                                                            <td>' . date('d-m-Y H:i:s', strtotime($session['last_activity'])) . '</td>
+                                                            <td>' . $session['ip_address'] . '</td>
+                                                            <td>' . date('h:i:s a | d-M-Y', strtotime($session['last_activity'])) . '</td>
                                                             <td>' . $actionBtns . '</td>
                                                         </tr>';
                                                         }

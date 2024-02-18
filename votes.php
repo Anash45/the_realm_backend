@@ -157,6 +157,22 @@ if (!isLoggedIn()) {
                                 ?>
                                 <div class="card">
                                     <div class="card-body">
+                                        <div class="py-3 d-flex flex-column w-100 gap-3">
+                                            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET">
+                                                <div class="form-group mb-0">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" name="q" value="<?php echo isset($_GET['q']) ? $_GET['q'] : ''; ?>"
+                                                            placeholder="Search..." aria-label="Search..."
+                                                            aria-describedby="basic-addon2">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-sm btn-primary"
+                                                                type="submit">Search</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <?php echo getPagination('finalized_votes'); ?>
+                                        </div>
                                         <h4 class="card-title">Votes</h4>
                                         <div class="table-responsive">
                                             <table class="table dataTable">
@@ -175,7 +191,7 @@ if (!isLoggedIn()) {
                                                             ?>
                                                             <th>IP Address</th>
                                                             <th>Action</th>
-                                                        <?php
+                                                            <?php
                                                         }
                                                         ?>
                                                     </tr>

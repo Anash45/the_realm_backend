@@ -1123,3 +1123,4 @@ resources/theme/template/pages/ui-features/typography.html
 resources/theme/template/partials/_footer.html
 resources/theme/template/partials/_navbar.html
 resources/theme/template/partials/_sidebar.html
+db_conn.php

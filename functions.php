@@ -12,8 +12,9 @@ function isLoggedIn()
         // Connect to your database
         $connection = connectToDatabase();
 
+        $ip_address = $_SERVER['REMOTE_ADDR'];
         // Check if the user ID exists in the online_users table
-        $checkQuery = "SELECT * FROM online_users WHERE account_id = $userId";
+        $checkQuery = "SELECT * FROM online_users WHERE account_id = $userId AND ip_address = '$ip_address'";
         $checkResult = $connection->query($checkQuery);
 
         // Close database connection
@@ -22,6 +23,7 @@ function isLoggedIn()
         // Return true if user ID exists in online_users table
         return $checkResult->num_rows > 0;
     } else {
+        session_destroy();	
         return false;
     }
 }
@@ -48,6 +50,7 @@ function updateOnlineStatus()
         // Connect to your database
         $connection = connectToDatabase();
 
+        $ip_address = $_SERVER['REMOTE_ADDR']; 
         // Check if the user ID already exists in the online_users table
         $checkQuery = "SELECT * FROM online_users WHERE account_id = $userId";
         $checkResult = $connection->query($checkQuery);
@@ -58,7 +61,7 @@ function updateOnlineStatus()
             $connection->query($updateQuery);
         } else {
             // User doesn't exist, insert a new record
-            $insertQuery = "INSERT INTO online_users (account_id, last_activity) VALUES ($userId, '$lastActivity')";
+            $insertQuery = "INSERT INTO online_users (account_id, last_activity, ip_address) VALUES ($userId, '$lastActivity', '$ip_address')";
             $connection->query($insertQuery);
         }
     }
@@ -72,7 +75,7 @@ function logout()
 
     // Remove user from online status
     removeUserFromOnline();
-    
+
     // Redirect to the login page or any other desired page
     header("Location: login.php");
     exit();
@@ -223,19 +226,39 @@ function updateAccount($updateData, $conditions)
 }
 
 // Function to get all accounts
-function getAllAccounts()
+function getAllAccounts($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
     $query = "SELECT * FROM accounts";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE username LIKE '%$searchQuery%' OR role LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $accounts = [];
     while ($row = $result->fetch_assoc()) {
         $accounts[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $accounts);
 }
+
 
 // Function to get an account by ID
 function getAccountById($id)
@@ -324,19 +347,39 @@ function updateVote($updateData, $conditions)
 }
 
 // Function to get all finalized votes
-function getAllVotes()
+function getAllVotes($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
     $query = "SELECT * FROM finalized_votes";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE server_name LIKE '%$searchQuery%' OR username LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $votes = [];
     while ($row = $result->fetch_assoc()) {
         $votes[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $votes);
 }
+
 
 // Function to get a finalized vote by ID
 function getVoteById($id)
@@ -372,11 +415,16 @@ function getVotesByServerName($serverName)
         return array("success" => false, "data" => "No votes found for the specified server name.");
     }
 }
-
 // Function to insert a new store category
-function insertStoreCategory($store, $categoryName, $categoryImage)
+function insertCategory($store, $categoryName, $categoryImage)
 {
     $connection = connectToDatabase();
+
+    $query1 = "SELECT * FROM store_categories WHERE store = '$store' && category_name = '$categoryName'";
+    $result = $connection->query($query1);
+    if($result->num_rows > 0){
+        return array("success" => false, "data" => "Category already exists.");
+    }
 
     $query = "INSERT INTO store_categories (store, category_name, category_image) VALUES ('$store', '$categoryName', '$categoryImage')";
 
@@ -388,7 +436,7 @@ function insertStoreCategory($store, $categoryName, $categoryImage)
 }
 
 // Function to delete a store category by ID
-function deleteStoreCategoryById($id)
+function deleteCategoryById($id)
 {
     $connection = connectToDatabase();
 
@@ -398,6 +446,22 @@ function deleteStoreCategoryById($id)
         return array("success" => true, "data" => "Record deleted successfully.");
     } else {
         return array("success" => false, "data" => "Error deleting record: " . $connection->error);
+    }
+}
+
+// Function to get a store category by ID
+function getCategoryById($id)
+{
+    $connection = connectToDatabase();
+
+    $query = "SELECT * FROM store_categories WHERE id=$id";
+    $result = $connection->query($query);
+
+    if ($result->num_rows == 1) {
+        $category = $result->fetch_assoc();
+        return array("success" => true, "data" => $category);
+    } else {
+        return array("success" => false, "data" => "Category not found.");
     }
 }
 
@@ -428,62 +492,46 @@ function updateStoreCategory($updateData, $conditions)
 }
 
 // Function to get all store categories
-function getAllStoreCategories()
+function getAllStoreCategories($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
     $query = "SELECT * FROM store_categories";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE category_name LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
-    $storeCategories = [];
+    // Fetch results
+    $categories = [];
     while ($row = $result->fetch_assoc()) {
-        $storeCategories[] = $row;
+        $categories[] = $row;
     }
-    return array("success" => true, "data" => $storeCategories);
+
+    // Return the data
+    return array("success" => true, "data" => $categories);
 }
 
-// Function to get a store category by ID
-function getStoreCategoryById($id)
-{
-    $connection = connectToDatabase();
-
-    $query = "SELECT * FROM store_categories WHERE id=$id";
-    $result = $connection->query($query);
-
-    $storeCategory = null;
-    if ($result->num_rows == 1) {
-        $storeCategory = $result->fetch_assoc();
-        return array("success" => true, "data" => $storeCategory);
-    } else {
-        return array("success" => false, "data" => "Store category not found.");
-    }
-}
-
-// Function to get store categories by store name
-function getStoreCategoriesByStore($store)
-{
-    $connection = connectToDatabase();
-
-    $query = "SELECT * FROM store_categories WHERE store='$store'";
-    $result = $connection->query($query);
-
-    $storeCategories = [];
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $storeCategories[] = $row;
-        }
-        return array("success" => true, "data" => $storeCategories);
-    } else {
-        return array("success" => false, "data" => "No store categories found for the specified store.");
-    }
-}
 
 // Function to insert a new donation
-function insertDonation($donorName, $amount, $date, $ipAddress)
+function insertDonation($store, $username, $product, $product_id, $quantity, $total_received, $status, $purchase_date, $ip_address)
 {
     $connection = connectToDatabase();
 
-    $query = "INSERT INTO donations (donor_name, amount, date, ip_address) VALUES ('$donorName', $amount, '$date', '$ipAddress')";
+    $query = "INSERT INTO store_payments (store, username, product, product_id, quantity, total_received, status, purchase_date, ip_address) VALUES ('$store', '$username', '$product', '$product_id', '$quantity', '$total_received', '$status', '$purchase_date', '$ip_address')";
 
     if ($connection->query($query) === TRUE) {
         return array("success" => true, "data" => "New record created successfully.");
@@ -497,7 +545,7 @@ function deleteDonationById($id)
 {
     $connection = connectToDatabase();
 
-    $query = "DELETE FROM donations WHERE id=$id";
+    $query = "DELETE FROM store_payments WHERE id=$id";
 
     if ($connection->query($query) === TRUE) {
         return array("success" => true, "data" => "Record deleted successfully.");
@@ -523,7 +571,7 @@ function updateDonation($updateData, $conditions)
     }
     $conditionString = rtrim($conditionString, 'AND ');
 
-    $query = "UPDATE donations SET $updateString WHERE $conditionString";
+    $query = "UPDATE store_payments SET $updateString WHERE $conditionString";
 
     if ($connection->query($query) === TRUE) {
         return array("success" => true, "data" => "Record updated successfully.");
@@ -531,19 +579,91 @@ function updateDonation($updateData, $conditions)
         return array("success" => false, "data" => "Error updating record: " . $connection->error);
     }
 }
-
-// Function to get all donations
-function getAllDonations()
+function get_total_records($tableName)
 {
     $connection = connectToDatabase();
+    $result = $connection->query("SELECT COUNT(*) AS `total_records` FROM $tableName");
+    $totalRecords = $result->fetch_assoc();
+    return $totalRecords['total_records'];
+    return 1122;
+}
 
-    $query = "SELECT * FROM donations";
+function getPagination($tableName, $currentPage = 1)
+{
+    // Check if $_GET['q'] is set and prepare the query string
+    $queryString = '?';
+    if (isset($_GET['q'])) {
+        $queryString = '?q=' . urlencode($_GET['q']) . '&';
+    }
+
+    // Get total records count
+    $totalRecords = get_total_records($tableName);
+
+    // Calculate total pages
+    $recordsPerPage = 50;
+    $totalPages = ceil($totalRecords / $recordsPerPage);
+
+    // Start the navigation markup
+    $pagination = '<nav aria-label="Page navigation example">';
+    $pagination .= '<ul class="pagination justify-content-center flex-wrap">';
+
+    // Previous page link
+    if ($currentPage > 1) {
+        $pagination .= '<li class="page-item"><a class="page-link" href="' . $queryString . 'page=' . ($currentPage - 1) . '">Previous</a></li>';
+    }
+
+    // Page links
+    for ($i = 1; $i <= $totalPages; $i++) {
+        // Highlight the current page
+        $activeClass = ($i == $currentPage) ? 'active' : '';
+        $pagination .= '<li class="page-item ' . $activeClass . '"><a class="page-link" href="' . $queryString . 'page=' . $i . '">' . $i . '</a></li>';
+    }
+
+    // Next page link
+    if ($currentPage < $totalPages) {
+        $pagination .= '<li class="page-item"><a class="page-link" href="' . $queryString . 'page=' . ($currentPage + 1) . '">Next</a></li>';
+    }
+
+    // Close the navigation markup
+    $pagination .= '</ul>';
+    $pagination .= '</nav>';
+
+    // Return the pagination links
+    return $pagination;
+}
+// Function to get all donations
+
+// Adjusted getAllDonations function to support pagination and search
+function getAllDonations($currentPage = 1, $recordsPerPage = 50)
+{
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
+    $connection = connectToDatabase();
+
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
+    $query = "SELECT * FROM store_payments";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE store LIKE '%$searchQuery%' OR product LIKE '%$searchQuery%' OR username LIKE '%$searchQuery%' OR product LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $donations = [];
     while ($row = $result->fetch_assoc()) {
         $donations[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $donations);
 }
 
@@ -552,10 +672,9 @@ function getDonationById($id)
 {
     $connection = connectToDatabase();
 
-    $query = "SELECT * FROM donations WHERE id=$id";
+    $query = "SELECT * FROM store_payments WHERE id=$id";
     $result = $connection->query($query);
 
-    $donation = null;
     if ($result->num_rows == 1) {
         $donation = $result->fetch_assoc();
         return array("success" => true, "data" => $donation);
@@ -564,19 +683,40 @@ function getDonationById($id)
     }
 }
 
-function getAllActiveSessions()
+
+function getAllActiveSessions($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
-    $query = "SELECT online_users.id, accounts.username, online_users.last_activity FROM online_users JOIN accounts ON online_users.account_id = accounts.id";
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
+    $query = "SELECT online_users.id, accounts.username, online_users.last_activity, online_users.ip_address FROM online_users JOIN accounts ON online_users.account_id = accounts.id";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE accounts.username LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $sessions = [];
     while ($row = $result->fetch_assoc()) {
         $sessions[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $sessions);
 }
+
 function deleteSessionById($id)
 {
     $connection = connectToDatabase();
@@ -651,17 +791,36 @@ function updateStore($updateData, $conditions)
 
 
 // Function to get all stores
-function getAllStores()
+function getAllStores($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
     $query = "SELECT * FROM stores";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE store_name LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $stores = [];
     while ($row = $result->fetch_assoc()) {
         $stores[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $stores);
 }
 
@@ -716,24 +875,39 @@ function deleteStoreItemById($id)
     }
 }
 
-function getAllStoreItems()
+function getAllStoreItems($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
-    // Prepare query
-    $query = "SELECT * FROM store_items";
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
 
-    // Execute query
+    // Prepare the SQL query with search condition if provided
+    $query = "SELECT * FROM store_items";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE store LIKE '%$searchQuery%' OR item_name LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
-    // Fetch data
+    // Fetch results
     $storeItems = [];
     while ($row = $result->fetch_assoc()) {
         $storeItems[] = $row;
     }
 
+    // Return the data
     return array("success" => true, "data" => $storeItems);
 }
+
 
 function getStoreItemById($id)
 {
@@ -849,19 +1023,39 @@ function updateVoteLink($updateData, $conditions)
 }
 
 // Function to get all vote links
-function getAllVoteLinks()
+function getAllVoteLinks($currentPage = 1, $recordsPerPage = 50)
 {
+    if(isset($_GET['page'])){
+        $currentPage = intval($_GET['page']);
+    }
     $connection = connectToDatabase();
 
+    // Calculate offset for pagination
+    $offset = ($currentPage - 1) * $recordsPerPage;
+
+    // Prepare the SQL query with search condition if provided
     $query = "SELECT * FROM vote_links";
+    if (isset($_GET['q']) && !empty($_GET['q'])) {
+        $searchQuery = $_GET['q'];
+        $query .= " WHERE title LIKE '%$searchQuery%' OR url LIKE '%$searchQuery%'";
+    }
+
+    // Add pagination to the query
+    $query .= " LIMIT $recordsPerPage OFFSET $offset";
+
+    // Execute the query
     $result = $connection->query($query);
 
+    // Fetch results
     $voteLinks = [];
     while ($row = $result->fetch_assoc()) {
         $voteLinks[] = $row;
     }
+
+    // Return the data
     return array("success" => true, "data" => $voteLinks);
 }
+
 
 // Function to get a vote link by ID
 function getVoteLinkById($id)

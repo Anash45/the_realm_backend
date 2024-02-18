@@ -27,3 +27,6 @@ table.dataTable tbody tr{
     width: 30px;
     border-radius: 8px;
 }
+.gap-3{
+    gap: 16px;
+}

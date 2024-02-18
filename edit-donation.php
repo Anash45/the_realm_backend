@@ -21,47 +21,45 @@ if (!isLoggedIn() || !isAdmin()) {
                 <?php include 'partials/_navbar.php'; ?>
                 <!-- partial -->
                 <?php
-                $info = '';
-                // Check if form is submitted
+                $info = $error = "";
+
                 if (isset($_POST['submit'])) {
-                    // Sanitize input
-                    $donorName = sanitize($_POST['donor_name']);
-                    $amount = $_POST['amount'];
-                    $date = $_POST['date'];
+                    // Retrieve form data
+                    $store = $_POST['store'];
+                    $username = $_POST['username'];
+                    $product = $_POST['product'];
+                    $product_id = $_POST['product_id'];
+                    $quantity = $_POST['quantity'];
+                    $total_received = $_POST['total_received'];
+                    $status = $_POST['status'];
+                    $purchase_date = $_POST['purchase_date'];
                     $ip_address = $_POST['ip_address'];
-                    $donationId = $_GET['id']; // Assuming the ID is passed in the URL parameter
-                
-                    // Check if all fields are filled
-                    if (empty($donorName) || empty($amount) || empty($date) || empty($ip_address)) {
-                        $info = '<div class="alert alert-danger" role="alert">
-                                    All fields are required!
-                                </div>';
+
+                    // Validate form data (you may add more validation as needed)
+                    if (empty($store) || empty($username) || empty($product) || empty($product_id) || empty($quantity) || empty($total_received) || empty($status) || empty($purchase_date) || empty($ip_address)) {
+                        $error = '<div class="alert alert-danger" role="alert">All fields are required.</div>';
                     } else {
-                        // Prepare update data
+                        // Update donation information
                         $updateData = array(
-                            'donor_name' => sanitize($donorName),
-                            'amount' => sanitize($amount),
-                            'date' => sanitize($date),
-                            'ip_address' => sanitize($ip_address)
+                            'store' => $store,
+                            'username' => $username,
+                            'product' => $product,
+                            'product_id' => $product_id,
+                            'quantity' => $quantity,
+                            'total_received' => $total_received,
+                            'status' => $status,
+                            'purchase_date' => $purchase_date,
+                            'ip_address' => $ip_address
                         );
 
-                        // Prepare condition
-                        $conditions = array(
-                            'id' => $donationId
-                        );
-
-                        // Call the updateDonation function
+                        $conditions = array('id' => $_GET['id']); // Assuming you are passing the ID via GET parameter
+                
+                        // Update the donation
                         $updateResult = updateDonation($updateData, $conditions);
-
-                        // Check the result and set the message accordingly
-                        if ($updateResult['success'] === true) {
-                            $info = '<div class="alert alert-success" role="alert">
-                                        Donation updated successfully.
-                                    </div>';
+                        if ($updateResult['success']) {
+                            $info = '<div class="alert alert-success" role="alert">Donation information updated successfully.</div>';
                         } else {
-                            $info = '<div class="alert alert-danger" role="alert">
-                                        ' . $updateResult['data'] . '
-                                    </div>';
+                            $error = '<div class="alert alert-danger" role="alert">Error updating donation information: ' . $updateResult['data'] . '</div>';
                         }
                     }
                 }
@@ -72,45 +70,82 @@ if (!isLoggedIn() || !isAdmin()) {
                             <h2 class="display1 text-center">Donations</h2>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mx-auto mb-3">
-                                <a href="donations.php" class="btn btn-sm btn-primary"><i class="mdi mdi-arrow-left"></i> Back</a>
+                            <div class="col-md-12 mx-auto mb-3">
+                                <a href="donations.php" class="btn btn-sm btn-primary"><i
+                                        class="mdi mdi-arrow-left"></i> Back</a>
                             </div>
                         </div>
                         <?php if (isset($_REQUEST['id'])) {
                             $id = $_REQUEST['id'];
-                            $Donation = getDonationById($id);
-                            if ($Donation['success'] == true) {
+                            $donation = getDonationById($id);
+                            if ($donation['success'] == true) {
                                 ?>
                                 <div class="row">
-                                    <div class="col-md-6 grid-margin stretch-card mx-auto">
+                                    <div class="col-md-12 grid-margin stretch-card mx-auto">
                                         <div class="card">
                                             <div class="card-body">
                                                 <h4 class="card-title">Edit Donation</h4>
                                                 <?php echo $info; ?>
                                                 <form class="forms-sample" method="POST">
-                                                    <div class="form-group">
-                                                        <label for="DonorName">Donor Name</label>
-                                                        <input type="text" class="form-control" name="donor_name" id="DonorName"
-                                                            required value="<?php echo $Donation['data']['donor_name']; ?>"
-                                                            placeholder="Donor Name">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="amount">Amount</label>
-                                                        <input type="number" class="form-control" name="amount" id="amount"
-                                                            required placeholder="Amount"
-                                                            value="<?php echo $Donation['data']['amount']; ?>">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="Date">Date</label>
-                                                        <input type="date" class="form-control" name="date" id="Date"
-                                                            placeholder="Date" value="<?php echo $Donation['data']['date']; ?>">
-                                                        <p><small>Leave empty if you want to use today's date!</small></p>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="ipAddress">IP Address</label>
-                                                        <input type="text" class="form-control" name="ip_address" id="ipAddress"
-                                                            required placeholder="IP Address"
-                                                            value="<?php echo $Donation['data']['ip_address']; ?>">
+                                                    <div class="row">
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <label for="store">Store</label>
+                                                                <input type="text" class="form-control" name="store" id="store"
+                                                                    required placeholder="Store"
+                                                                    value="<?php echo $donation['data']['store']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="username">Username</label>
+                                                                <input type="text" class="form-control" name="username"
+                                                                    id="username" required placeholder="Username"
+                                                                    value="<?php echo $donation['data']['username']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="product">Product</label>
+                                                                <input type="text" class="form-control" name="product"
+                                                                    id="product" required placeholder="Product"
+                                                                    value="<?php echo $donation['data']['product']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="product_id">Product ID</label>
+                                                                <input type="number" class="form-control" name="product_id"
+                                                                    id="product_id" required placeholder="Product ID"
+                                                                    value="<?php echo $donation['data']['product_id']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="quantity">Quantity</label>
+                                                                <input type="number" class="form-control" name="quantity"
+                                                                    id="quantity" required placeholder="Quantity"
+                                                                    value="<?php echo $donation['data']['quantity']; ?>">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="form-group">
+                                                                <label for="total_received">Total Received</label>
+                                                                <input type="number" class="form-control" name="total_received"
+                                                                    id="total_received" required placeholder="Total Received"
+                                                                    value="<?php echo $donation['data']['total_received']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="status">Status</label>
+                                                                <input type="text" class="form-control" name="status"
+                                                                    id="status" required placeholder="Status"
+                                                                    value="<?php echo $donation['data']['status']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="purchase_date">Purchase Date</label>
+                                                                <input type="date" class="form-control" name="purchase_date"
+                                                                    id="purchase_date" required placeholder="Purchase Date"
+                                                                    value="<?php echo $donation['data']['purchase_date']; ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="ip_address">IP Address</label>
+                                                                <input type="text" class="form-control" name="ip_address"
+                                                                    id="ip_address" required placeholder="IP Address"
+                                                                    value="<?php echo $donation['data']['ip_address']; ?>">
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <button class="btn btn-dark mr-2" type="reset">Cancel</button>
                                                     <button type="submit" class="btn btn-primary" name="submit">Submit</button>

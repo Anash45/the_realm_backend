@@ -40,7 +40,7 @@
         <span class="nav-link">Accounts Section</span>
       </li>
       <li class="nav-item menu-items">
-        <a class="nav-link" href="index.php">
+        <a class="nav-link" href="sessions.php">
           <span class="menu-icon">
             <i class="mdi mdi-record text-success"></i>
           </span>
@@ -64,6 +64,14 @@
             <i class="mdi mdi-store"></i>
           </span>
           <span class="menu-title">Stores</span>
+        </a>
+      </li>
+      <li class="nav-item menu-items">
+        <a class="nav-link" href="store_categories.php">
+          <span class="menu-icon">
+            <i class="mdi mdi-store-alt"></i>
+          </span>
+          <span class="menu-title">Store Categories</span>
         </a>
       </li>
       <li class="nav-item menu-items">

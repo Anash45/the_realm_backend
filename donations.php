@@ -32,36 +32,30 @@ if (!isLoggedIn()) {
                                 <div class="col-md-12 grid-margin stretch-card">
                                     <?php
                                     $info = '';
-                                    if (isset($_REQUEST['submit'])) {
-                                        // Sanitize input
-                                        $donorName = sanitize($_REQUEST['donor_name']);
-                                        $amount = $_REQUEST['amount'];
-                                        $ip_address = $_REQUEST['ip_address'];
-                                        $date = $_REQUEST['date'];
+                                    if (isset($_POST['submit'])) {
+                                        // Retrieve form data and sanitize
+                                        $store = htmlspecialchars($_POST['store']);
+                                        $username = htmlspecialchars($_POST['username']);
+                                        $product = htmlspecialchars($_POST['product']);
+                                        $product_id = $_POST['product_id'];
+                                        $quantity = $_POST['quantity'];
+                                        $total_received = $_POST['total_received'];
+                                        $status = htmlspecialchars($_POST['status']);
+                                        $purchase_date = $_POST['purchase_date'];
+                                        $ip_address = $_POST['ip_address'];
 
-                                        // Check if all fields are filled
-                                        if (empty($donorName) || empty($amount) || empty($ip_address)) {
-                                            $info = '<div class="alert alert-danger" role="alert">
-                                                    All fields are required
-                                                </div>';
+                                        // Validate and sanitize the rest of the form fields as needed...
+                                
+                                        // Call the insertDonation function
+                                        $result = insertDonation($store, $username, $product, $product_id, $quantity, $total_received, $status, $purchase_date, $ip_address);
+
+                                        // Check the result of the insertion
+                                        if ($result['success']) {
+                                            // Display success message
+                                            $info = '<div class="alert alert-success" role="alert">' . $result['data'] . '</div>';
                                         } else {
-                                            if (empty($date)) {
-                                                $date = date('Y-m-d');
-                                            }
-                                            // Insert the data
-                                            $insert = insertDonation($donorName, $amount, $date, $ip_address);
-
-                                            // Check if insertion was successful
-                                            if ($insert['success'] == true) {
-                                                $info = '<div class="alert alert-success" role="alert">
-                                                        ' . $insert['data'] . ', refreshing in 2s!
-                                                    </div>';
-                                                echo '<script>setTimeout(function(){ window.location= "donations.php" }, 2000);</script>';
-                                            } else {
-                                                $info = '<div class="alert alert-danger" role="alert">
-                                                        ' . $insert['data'] . '
-                                                    </div>';
-                                            }
+                                            // Display error message
+                                            $error = '<div class="alert alert-danger" role="alert">' . $result['data'] . '</div>';
                                         }
                                     } else if (isset($_REQUEST['deleteDonation'])) {
                                         $id = sanitize($_REQUEST['deleteDonation']);
@@ -81,30 +75,60 @@ if (!isLoggedIn()) {
                                     }
                                     ?>
                                     <div class="card">
-                                        <?php echo $info; ?>
                                         <div class="card-body">
+                                            <?php echo $info; ?>
                                             <h4 class="card-title">Add Donation</h4>
                                             <form class="forms-sample" method="POST">
-                                                <div class="form-group">
-                                                    <label for="DonorName">Donor Name</label>
-                                                    <input type="text" class="form-control" name="donor_name" id="DonorName"
-                                                        required placeholder="Donor Name">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="Amount">Amount</label>
-                                                    <input type="number" class="form-control" name="amount" id="Amount"
-                                                        required placeholder="Amount">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="Date">Date</label>
-                                                    <input type="date" class="form-control" name="date" id="Date"
-                                                        placeholder="Date">
-                                                    <p><small>Leave empty if you want to use today's date!</small></p>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label for="ipAddress">IP Address</label>
-                                                    <input type="text" class="form-control" name="ip_address" id="ipAddress"
-                                                        required placeholder="IP Address">
+                                                <div class="row">
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label for="store">Store</label>
+                                                            <input type="text" class="form-control" name="store" id="store"
+                                                                required placeholder="Store">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="username">Username</label>
+                                                            <input type="text" class="form-control" name="username"
+                                                                id="username" required placeholder="Username">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="product">Product</label>
+                                                            <input type="text" class="form-control" name="product"
+                                                                id="product" required placeholder="Product">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="product_id">Product ID</label>
+                                                            <input type="number" class="form-control" name="product_id"
+                                                                id="product_id" required placeholder="Product ID">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="number">Quantity</label>
+                                                            <input type="number" class="form-control" name="quantity"
+                                                                id="quantity" required placeholder="Quantity">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label for="total_received">Total Received</label>
+                                                            <input type="number" class="form-control" name="total_received"
+                                                                id="total_received" required placeholder="Total Received">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="status">Status</label>
+                                                            <input type="text" class="form-control" name="status"
+                                                                id="status" required placeholder="Status">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="purchase_date">Purchase Date</label>
+                                                            <input type="date" class="form-control" name="purchase_date"
+                                                                id="purchase_date" required placeholder="Purchase Date">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="ip_address">IP Address</label>
+                                                            <input type="text" class="form-control" name="ip_address"
+                                                                id="ip_address" required placeholder="IP Address">
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <button class="btn btn-dark mr-2" type="reset">Cancel</button>
                                                 <button type="submit" class="btn btn-primary" name="submit">Submit</button>
@@ -122,15 +146,37 @@ if (!isLoggedIn()) {
                                 ?>
                                 <div class="card">
                                     <div class="card-body">
+                                        <div class="py-3 d-flex flex-column w-100 gap-3">
+                                            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET">
+                                                <div class="form-group mb-0">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" name="q" value="<?php echo isset($_GET['q']) ? $_GET['q'] : ''; ?>"
+                                                            placeholder="Search..."
+                                                            aria-label="Search..."
+                                                            aria-describedby="basic-addon2">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-sm btn-primary"
+                                                                type="submit">Search</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <?php echo getPagination('store_payments'); ?>
+                                        </div>
                                         <h4 class="card-title">Donations</h4>
                                         <div class="table-responsive">
                                             <table class="table">
                                                 <thead>
                                                     <tr>
                                                         <th>ID</th>
-                                                        <th>Donor Name</th>
+                                                        <th>Store</th>
+                                                        <th>Username</th>
+                                                        <th>Product</th>
+                                                        <th>Product ID</th>
+                                                        <th>Quantity</th>
+                                                        <th>Status</th>
                                                         <th>Amount</th>
-                                                        <th>Date</th>
+                                                        <th>Purchase Date</th>
                                                         <?php
                                                         if (isAdmin()) {
                                                             ?>
@@ -157,9 +203,14 @@ if (!isLoggedIn()) {
 
                                                             echo '<tr>
                                                             <td>' . $donation['id'] . '</td>
-                                                            <td>' . $donation['donor_name'] . '</td>
-                                                            <td>' . $donation['amount'] . '</td>
-                                                            <td>' . date('d-m-Y', strtotime($donation['date'])) . '</td>
+                                                            <td>' . $donation['store'] . '</td>
+                                                            <td>' . $donation['username'] . '</td>
+                                                            <td>' . $donation['product'] . '</td>
+                                                            <td>' . $donation['product_id'] . '</td>
+                                                            <td>' . $donation['quantity'] . '</td>
+                                                            <td>' . $donation['status'] . '</td>
+                                                            <td>' . $donation['total_received'] . '</td>
+                                                            <td>' . date('d-m-Y', $donation['unix_time']) . '</td>
                                                             ' . $adminTd . '
                                                         </tr>';
                                                         }
